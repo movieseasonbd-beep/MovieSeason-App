@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* All your existing CSS code remains unchanged. */
         /* ===== THEME VARIABLES & TOGGLE ===== */
         :root {
             --bg-base: #0a0a0a;
@@ -2045,7 +2046,7 @@
               <a href="#explore-app">Explore</a>
                 <a href="#faq">FAQ</a>
                 <a href="#contact">Contact</a>
-                <a href="https://github.com/arifariyanjoyWBD/ed/raw/refs/heads/main/MovieSeason.apk" class="nav-download">Download App</a>
+                <a href="https://github.com/arifariyanjoyWBD/ed/raw/refs/heads/main/MovieSeason.apk" class="nav-download download-link">Download App</a>
                  <div class="theme-switch-wrapper">
                     <label class="theme-switch" for="theme-checkbox-desktop">
                         <input type="checkbox" id="theme-checkbox-desktop" />
@@ -2118,7 +2119,7 @@
                             <span class="metric-label">Rated for 18+</span>
                         </div>
                       <div class="metric">
-                        <span class="age-rating">49K+</span>
+                        <span class="age-rating" id="download-counter-desktop">...</span>
                         <span class="metric-label">Downloads</span>
                     </div>
                     </div>
@@ -2138,13 +2139,13 @@
                         <span class="metric-label">Rated for 18+</span>
                     </div>
                   <div class="metric">
-                        <span class="age-rating">49K+</span>
+                        <span class="age-rating" id="download-counter-mobile">...</span>
                         <span class="metric-label">Downloads</span>
                     </div>
                 </div>
             </div>
             <div class="install-section">
-                <a href="https://github.com/arifariyanjoyWBD/ed/raw/refs/heads/main/MovieSeason.apk" style="text-decoration: none;">
+                <a href="https://github.com/arifariyanjoyWBD/ed/raw/refs/heads/main/MovieSeason.apk" class="download-link" style="text-decoration: none;">
                     <button class="install-btn">Install</button>
                 </a>
                 <p class="monetization"></p>
@@ -2584,7 +2585,7 @@
     </footer>
         
     <!-- Floating Action Button -->
-    <a href="https://github.com/arifariyanjoyWBD/ed/raw/refs/heads/main/MovieSeason.apk" class="fab">
+    <a href="https://github.com/arifariyanjoyWBD/ed/raw/refs/heads/main/MovieSeason.apk" class="fab download-link">
         <i class="fas fa-download"></i>
     </a>
 
@@ -2594,10 +2595,77 @@
         <img class="modal-content" id="modalImage">
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <!-- JavaScript for Enhanced Functionality -->
     <script type='text/javascript'>
     //<![CDATA[
     document.addEventListener('DOMContentLoaded', function() {
+        
+        // ===== START: FIREBASE DOWNLOAD COUNTER =====
+
+        // আপনার স্ক্রিনশট থেকে alınan Firebase কনফিগারেশন
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZFkIEazUAHcj5AuHTu1QGDKEnu0QJGYM",
+            authDomain: "movieseason-downloads.firebaseapp.com",
+            projectId: "movieseason-downloads",
+            storageBucket: "movieseason-downloads.firebasestorage.app",
+            messagingSenderId: "296157020209",
+            appId: "1:296157020209:web:d52e69b5180d903ee3d510",
+            databaseURL: "https://movieseason-downloads-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const downloadCounterRef = database.ref('downloads/app');
+
+        // Function to update the count on the webpage
+        const updateCountOnPage = (count) => {
+             const formattedCount = new Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                compactDisplay: 'short'
+            }).format(count);
+            
+            const desktopCounter = document.getElementById('download-counter-desktop');
+            const mobileCounter = document.getElementById('download-counter-mobile');
+            
+            if (desktopCounter) desktopCounter.textContent = formattedCount + "+";
+            if (mobileCounter) mobileCounter.textContent = formattedCount + "+";
+        };
+
+        // Get the initial download count and listen for changes
+        downloadCounterRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            // ডাটাবেসে কোনো সংখ্যা না থাকলে 9000 থেকে শুরু হবে
+            const count = data && data.count ? data.count : 9000;
+            updateCountOnPage(count);
+        });
+
+        // Function to increment the download count
+        const incrementDownloadCount = () => {
+            downloadCounterRef.transaction((currentData) => {
+                if (currentData === null) {
+                    // যদি ডাটাবেসে কিছু না থাকে, তাহলে প্রথম ক্লিকে 9001 হবে
+                    return { count: 9001 };
+                } else {
+                    return { count: currentData.count + 1 };
+                }
+            });
+        };
+
+        // Add click listeners to all download links
+        const downloadLinks = document.querySelectorAll('.download-link');
+        downloadLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                incrementDownloadCount();
+            });
+        });
+        
+        // ===== END: FIREBASE DOWNLOAD COUNTER =====
+
 
         // ===== THEME TOGGLE FUNCTIONALITY =====
         const desktopToggle = document.getElementById('theme-checkbox-desktop');
@@ -2709,16 +2777,12 @@
             const startAutoSlide = () => {
                 clearInterval(autoSlideInterval);
                 autoSlideInterval = setInterval(() => {
-                    // Check if the slider is at the end (or very close to it)
-                    // The '-1' is a small buffer for potential rounding issues
                     if (screenshotSlider.scrollLeft + screenshotSlider.clientWidth >= screenshotSlider.scrollWidth - 1) {
-                        // If at the end, smoothly scroll back to the beginning
                         screenshotSlider.scrollTo({ left: 0, behavior: 'smooth' });
                     } else {
-                        // Otherwise, smoothly scroll by the width of one viewport
                         screenshotSlider.scrollBy({ left: screenshotSlider.clientWidth, behavior: 'smooth' });
                     }
-                }, 5000); // আপনি এই 5000ms (5 সেকেন্ড) সময় পরিবর্তন করতে পারেন
+                }, 5000);
             };
 
             const stopAutoSlide = () => {
@@ -2742,25 +2806,19 @@
             const scrollDistance = () => screenshotSliderTrack.clientWidth * 0.8; 
 
             screenshotLeftArrow.addEventListener('click', () => {
-                // Check if we are at the beginning
                 if (screenshotSliderTrack.scrollLeft === 0) {
-                    // If yes, jump to the end
                     screenshotSliderTrack.scrollTo({ left: screenshotSliderTrack.scrollWidth, behavior: 'smooth' });
                 } else {
-                    // Otherwise, scroll left
                     screenshotSliderTrack.scrollBy({ left: -scrollDistance(), behavior: 'smooth' });
                 }
             });
 
             screenshotRightArrow.addEventListener('click', () => {
-                // Check if we are at the end (with a small tolerance)
                 const isAtEnd = screenshotSliderTrack.scrollLeft + screenshotSliderTrack.clientWidth >= screenshotSliderTrack.scrollWidth - 1;
                 
                 if (isAtEnd) {
-                    // If yes, jump back to the beginning
                     screenshotSliderTrack.scrollTo({ left: 0, behavior: 'smooth' });
                 } else {
-                    // Otherwise, scroll right
                     screenshotSliderTrack.scrollBy({ left: scrollDistance(), behavior: 'smooth' });
                 }
             });
@@ -2812,7 +2870,6 @@
             const modalImg = document.getElementById('modalImage');
             const closeModalBtn = document.getElementById('closeModalBtn');
 
-            // Function to close the modal
             function closeModalFunction() {
                 if (modal.style.display !== 'none') {
                     modal.style.display = 'none';
@@ -2820,7 +2877,6 @@
                 }
             }
             
-            // Listen for the popstate event (browser back button)
             window.addEventListener('popstate', closeModalFunction);
 
             const showcaseSlides = document.querySelectorAll('.showcase-slide, .slider-slide');
@@ -2828,7 +2884,6 @@
                 item.addEventListener('click', function() {
                     const imgElement = this.querySelector('img');
                     if (imgElement) {
-                        // Push a state to history API to handle the back button
                         history.pushState({modal: 'open'}, 'Image View', '#imageView');
                         
                         modal.style.display = 'flex';
@@ -2838,20 +2893,16 @@
                 });
             });
 
-            // Function to trigger history back, which will then trigger popstate
             function triggerClose() {
-                // Check if the modal is open before going back, to avoid going back on the main page
                 if (modal.style.display === 'flex') {
                     history.back();
                 }
             }
 
-            // Close with the 'x' button
             if (closeModalBtn) {
                 closeModalBtn.addEventListener('click', triggerClose);
             }
 
-            // Close by clicking the background
             modal.addEventListener('click', function(event) {
                 if (event.target === modal) {
                     triggerClose();
@@ -2868,7 +2919,6 @@
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
                     
-                    // Stagger children if the parent container has the class
                     if (entry.target.classList.contains('animate-stagger-children')) {
                         const children = entry.target.querySelectorAll('.feature-item, .feature-card');
                         children.forEach((child, index) => {
