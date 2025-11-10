@@ -191,6 +191,11 @@
             line-height: 1.6;
             overflow-x: hidden;
             position: relative;
+            /* --- ADDED TO DISABLE SELECTION --- */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE10+/Edge */
+            user-select: none;         /* Standard */
         }
 
         /* Prevent background scroll when modal is open */
@@ -2609,6 +2614,24 @@
     //<![CDATA[
     document.addEventListener('DOMContentLoaded', function() {
         
+        // ===== START: DISABLE COPY & RIGHT-CLICK =====
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('copy', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('cut', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('paste', function(e) {
+            e.preventDefault();
+        });
+        // ===== END: DISABLE COPY & RIGHT-CLICK =====
+
         // ===== START: FIREBASE DOWNLOAD COUNTER =====
 
         // আপনার স্ক্রিনশট থেকে alınan Firebase কনফিগারেশন
