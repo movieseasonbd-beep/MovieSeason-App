@@ -708,6 +708,10 @@
             border: 1px solid var(--border-color-light);
             object-fit: contain; 
             display: block;
+            /* --- MODIFICATION START --- */
+            pointer-events: none;
+            -webkit-touch-callout: none; /* For iOS */
+            /* --- MODIFICATION END --- */
         }
 
         .showcase-caption {
@@ -833,6 +837,10 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            /* --- MODIFICATION START --- */
+            pointer-events: none;
+            -webkit-touch-callout: none; /* For iOS */
+            /* --- MODIFICATION END --- */
         }
         
         .slider-dots {
